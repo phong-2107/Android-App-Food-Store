@@ -1,0 +1,57 @@
+plugins {
+    id "com.android.application"
+    id "kotlin-android"
+    // The Flutter Gradle Plugin (phải đặt sau Android & Kotlin plugin)
+    id "dev.flutter.flutter-gradle-plugin"
+}
+
+android {
+    namespace = "com.example.project_android_final"
+
+    // Sử dụng các giá trị compileSdk, ndkVersion từ flutter.gradle
+    compileSdk = 34
+    ndkVersion = flutter.ndkVersion
+
+    // Nếu bạn đang dùng Java 17, có thể đặt thế này:
+    compileOptions {
+        sourceCompatibility = JavaVersion.VERSION_17
+        targetCompatibility = JavaVersion.VERSION_17
+    }
+    // Hoặc nếu vẫn muốn Java 8, giữ như sau:
+    // compileOptions {
+    //     sourceCompatibility = JavaVersion.VERSION_1_8
+    //     targetCompatibility = JavaVersion.VERSION_1_8
+    // }
+
+    kotlinOptions {
+        // Nếu dùng Java 17, đặt jvmTarget = "17"
+        jvmTarget = "17"
+        // Nếu vẫn muốn Java 8, jvmTarget = "1.8"
+        // jvmTarget = "1.8"
+    }
+
+    defaultConfig {
+        // Thay applicationId và namespace theo dự án
+        applicationId = "com.example.project_android_final"
+
+        // Lấy minSdk, targetSdk, versionCode, versionName từ flutter.gradle
+        minSdk = flutter.minSdkVersion
+        targetSdk = 34
+        versionCode = flutter.versionCode
+        versionName = flutter.versionName
+    }
+
+    buildTypes {
+        release {
+            // Tạm thời dùng signingConfig debug để build release
+            signingConfig = signingConfigs.debug
+        }
+        // Thêm build type khác (debug) nếu cần
+        // debug { ... }
+    }
+}
+
+// Chỉ rõ đường dẫn mã nguồn Flutter
+flutter {
+    source = "../.."
+}
