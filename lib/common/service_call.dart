@@ -19,8 +19,8 @@ class ServiceCall {
       try {
         // Kiểm tra thông tin đăng nhập demo
         if (path == SVKey.svLogin ||
-            parameter['email'] == 'demo@gmail.com' &&
-            parameter['password'] == '123456') {
+            parameter['email'] == '1@gmail.com' &&
+            parameter['password'] == '1') {
           // Trả về phản hồi giả lập khi thông tin đúng
           var fakeResponse = {
             "status": "1",

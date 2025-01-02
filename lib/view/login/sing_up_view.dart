@@ -2,13 +2,14 @@ import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:project_android_final/common/color_extension.dart';
-import 'package:project_android_final/common/extension.dart';
 import 'package:project_android_final/common_widget/round_button.dart';
+import 'package:project_android_final/common_widget/round_textfield.dart';
+import 'package:project_android_final/common/extension.dart';
+import 'package:project_android_final/common/globs.dart';
 import 'package:project_android_final/view/login/login_view.dart';
-
-import '../../common/globs.dart';
-import '../../common/service_call.dart';
-import '../../common_widget/round_textfield.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:project_android_final/view/main_tabview/main_tabview.dart';
+import '../../utils/auth.dart';
 import '../on_boarding/on_boarding_view.dart';
 
 class SignUpView extends StatefulWidget {
@@ -19,16 +20,16 @@ class SignUpView extends StatefulWidget {
 }
 
 class _SignUpViewState extends State<SignUpView> {
-  TextEditingController txtName = TextEditingController();
-  TextEditingController txtMobile = TextEditingController();
-  TextEditingController txtAddress = TextEditingController();
-  TextEditingController txtEmail = TextEditingController();
-  TextEditingController txtPassword = TextEditingController();
-  TextEditingController txtConfirmPassword = TextEditingController();
+  final TextEditingController txtName = TextEditingController();
+  final TextEditingController txtMobile = TextEditingController();
+  final TextEditingController txtEmail = TextEditingController();
+  final TextEditingController txtPassword = TextEditingController();
+  final TextEditingController txtConfirmPassword = TextEditingController();
+
+  bool _isLoading = false;
 
   @override
   Widget build(BuildContext context) {
-
     return Scaffold(
       body: SingleChildScrollView(
         child: Padding(
@@ -36,84 +37,58 @@ class _SignUpViewState extends State<SignUpView> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.center,
             children: [
-              const SizedBox(
-                height: 64,
-              ),
+              const SizedBox(height: 64),
               Text(
                 "Sign Up",
                 style: TextStyle(
-                    color: TColor.primaryText,
-                    fontSize: 30,
-                    fontWeight: FontWeight.w800),
+                  color: TColor.primaryText,
+                  fontSize: 30,
+                  fontWeight: FontWeight.w800,
+                ),
               ),
               Text(
                 "Add your details to sign up",
                 style: TextStyle(
-                    color: TColor.secondaryText,
-                    fontSize: 14,
-                    fontWeight: FontWeight.w500),
+                  color: TColor.secondaryText,
+                  fontSize: 14,
+                  fontWeight: FontWeight.w500,
+                ),
               ),
-              const SizedBox(
-                height: 25,
-              ),
+              const SizedBox(height: 25),
               RoundTextfield(
                 hintText: "Name",
                 controller: txtName,
               ),
-              const SizedBox(
-                height: 25,
-              ),
+              const SizedBox(height: 25),
               RoundTextfield(
                 hintText: "Email",
                 controller: txtEmail,
                 keyboardType: TextInputType.emailAddress,
               ),
-              const SizedBox(
-                height: 25,
-              ),
+              const SizedBox(height: 25),
               RoundTextfield(
                 hintText: "Mobile No",
                 controller: txtMobile,
                 keyboardType: TextInputType.phone,
               ),
-              const SizedBox(
-                height: 25,
-              ),
-              RoundTextfield(
-                hintText: "Address",
-                controller: txtAddress,
-              ),
-              const SizedBox(
-                height: 25,
-              ),
+              const SizedBox(height: 25),
               RoundTextfield(
                 hintText: "Password",
                 controller: txtPassword,
                 obscureText: true,
               ),
-               const SizedBox(
-                height: 25,
-              ),
+              const SizedBox(height: 25),
               RoundTextfield(
                 hintText: "Confirm Password",
                 controller: txtConfirmPassword,
                 obscureText: true,
               ),
-              const SizedBox(
-                height: 25,
+              const SizedBox(height: 25),
+              RoundButton(
+                title: _isLoading ? "Loading..." : "Sign Up",
+                onPressed: (){_isLoading ? null : btnSignUp();}
               ),
-              RoundButton(title: "Sign Up", onPressed: () {
-                btnSignUp();
-                //  Navigator.push(
-                //       context,
-                //       MaterialPageRoute(
-                //         builder: (context) => const OTPView(),
-                //       ),
-                //     );
-              }),
-              const SizedBox(
-                height: 30,
-              ),
+              const SizedBox(height: 30),
               TextButton(
                 onPressed: () {
                   Navigator.push(
@@ -129,16 +104,18 @@ class _SignUpViewState extends State<SignUpView> {
                     Text(
                       "Already have an Account? ",
                       style: TextStyle(
-                          color: TColor.secondaryText,
-                          fontSize: 14,
-                          fontWeight: FontWeight.w500),
+                        color: TColor.secondaryText,
+                        fontSize: 14,
+                        fontWeight: FontWeight.w500,
+                      ),
                     ),
                     Text(
                       "Login",
                       style: TextStyle(
-                          color: TColor.primary,
-                          fontSize: 14,
-                          fontWeight: FontWeight.w700),
+                        color: TColor.primary,
+                        fontSize: 14,
+                        fontWeight: FontWeight.w700,
+                      ),
                     ),
                   ],
                 ),
@@ -150,78 +127,94 @@ class _SignUpViewState extends State<SignUpView> {
     );
   }
 
-  //TODO: Action
-  void btnSignUp() {
-
+  // Xử lý đăng ký khi nhấn nút Sign Up
+  Future<void> btnSignUp() async {
     if (txtName.text.isEmpty) {
-      mdShowAlert(Globs.appName, MSG.enterName, () {});
+      showAlert("Error", "Please enter your name");
       return;
     }
 
-    if (!txtEmail.text.isEmail) {
-      mdShowAlert(Globs.appName, MSG.enterEmail, () {});
+    if (txtEmail.text.isEmpty || !RegExp(r'\S+@\S+\.\S+').hasMatch(txtEmail.text)) {
+      showAlert("Error", "Please enter a valid email");
       return;
     }
 
     if (txtMobile.text.isEmpty) {
-      mdShowAlert(Globs.appName, MSG.enterMobile, () {});
+      showAlert("Error", "Please enter your mobile number");
       return;
     }
 
-    if (txtAddress.text.isEmpty) {
-      mdShowAlert(Globs.appName, MSG.enterAddress, () {});
-      return;
-    }
-
-    if (txtPassword.text.length < 6) {
-      mdShowAlert(Globs.appName, MSG.enterPassword, () {});
+    if (txtPassword.text.isEmpty || txtPassword.text.length < 3) {
+      showAlert("Error", "Password must be at least 6 characters");
       return;
     }
 
     if (txtPassword.text != txtConfirmPassword.text) {
-      mdShowAlert(Globs.appName, MSG.enterPasswordNotMatch, () {});
+      showAlert("Error", "Passwords do not match");
       return;
     }
 
-    endEditing();
+    setState(() => _isLoading = true);
 
-    serviceCallSignUp({
-      "name": txtName.text,
+    try {
+      final result = await Auth.register(
+        username: txtName.text,
+        email: txtEmail.text,
+        password: txtPassword.text,
+        role: "User",
+        phone: txtMobile.text,
+      );
 
-      "mobile": txtMobile.text,
-      "email": txtEmail.text,
-      "address": txtAddress.text,
-      "password": txtPassword.text,
-      "push_token": "",
-      "device_type": Platform.isAndroid ? "A" : "I"
-    });
+      if (result['success'] == true) {
+        // Lưu JWT token vào SharedPreferences
+        SharedPreferences prefs = await SharedPreferences.getInstance();
+        await prefs.setString('jwt_token', result['token']);
+        String role = result['role'] ?? "User";
+
+        if (role == 'Admin') {
+          Navigator.pushReplacement(
+            context,
+            MaterialPageRoute(builder: (context) => const MainTabView()), // Thay đổi nếu cần
+          );
+        } else if (role == 'User') {
+          Navigator.pushReplacement(
+            context,
+            MaterialPageRoute(builder: (context) => const MainTabView()), // Thay đổi nếu cần
+          );
+        } else {
+          mdShowAlert(
+            Globs.appName,
+            "Invalid role: $role",
+                () {},
+          );
+        }
+      } else {
+        showAlert("Error", result['message'] ?? "Registration failed");
+      }
+    } catch (e) {
+      showAlert("Error", "An error occurred: $e");
+    } finally {
+      setState(() => _isLoading = false);
+    }
   }
 
-  //TODO: ServiceCall
 
-  void serviceCallSignUp(Map<String, dynamic> parameter) {
-    Globs.showHUD();
-
-    ServiceCall.post(parameter, SVKey.svSignUp,
-        withSuccess: (responseObj) async {
-      Globs.hideHUD();
-      if (responseObj[KKey.status] == "1") {
-        Globs.udSet(responseObj[KKey.payload] as Map? ?? {}, Globs.userPayload);
-        Globs.udBoolSet(true, Globs.userLogin);
-        
-        Navigator.pushAndRemoveUntil(
-            context,
-            MaterialPageRoute(
-              builder: (context) => const OnBoardingView(),
-            ),
-            (route) => false);
-      } else {
-        mdShowAlert(Globs.appName,
-            responseObj[KKey.message] as String? ?? MSG.fail, () {});
-      }
-    }, failure: (err) async {
-      Globs.hideHUD();
-      mdShowAlert(Globs.appName, err.toString(), () {});
-    });
+  void showAlert(String title, String message, {VoidCallback? onOk}) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text(title),
+        content: Text(message),
+        actions: [
+          TextButton(
+            onPressed: () {
+              Navigator.of(context).pop();
+              if (onOk != null) onOk();
+            },
+            child: const Text("OK"),
+          ),
+        ],
+      ),
+    );
   }
 }

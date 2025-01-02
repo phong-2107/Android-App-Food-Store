@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:project_android_final/common/color_extension.dart';
 import 'package:project_android_final/common_widget/round_textfield.dart';
+import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
 
 import '../../common/globs.dart';
 import '../../common/service_call.dart';
@@ -11,6 +13,8 @@ import '../../common_widget/recent_item_row.dart';
 import '../../common_widget/view_all_title_row.dart';
 import '../more/my_order_view.dart';
 
+
+
 class HomeView extends StatefulWidget {
   const HomeView({super.key});
 
@@ -20,6 +24,25 @@ class HomeView extends StatefulWidget {
 
 class _HomeViewState extends State<HomeView> {
   TextEditingController txtSearch = TextEditingController();
+
+  // final Map<String, dynamic> userPayload;
+  static const userName = "demo";
+  // GreetingWidget({required this.userPayload});
+
+  String getGreetingMessage() {
+    final hour = DateTime.now().hour;
+    String greeting;
+
+    if (hour >= 5 && hour < 12) {
+      greeting = "Chào buổi sáng";
+    } else if (hour >= 12 && hour < 18) {
+      greeting = "Chào buổi trưa";
+    } else {
+      greeting = "Chào buổi tối";
+    }
+
+    return greeting;
+  }
 
   List catArr = [
     {"image": "assets/img/cat_offer.png", "name": "Offers"},
@@ -118,12 +141,13 @@ class _HomeViewState extends State<HomeView> {
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     Text(
-                      "Good morning ${ServiceCall.userPayload[KKey.name] ?? ""}!",
-                      style: TextStyle(
-                          color: TColor.primaryText,
-                          fontSize: 20,
-                          fontWeight: FontWeight.w800),
-                    ),
+                    "${getGreetingMessage()} $userName!",
+                style: TextStyle(
+                  color: TColor.primaryText,
+                  fontSize: 20,
+                  fontWeight: FontWeight.w800,
+                ),
+              ),
                     IconButton(
                       onPressed: () {
                         Navigator.push(

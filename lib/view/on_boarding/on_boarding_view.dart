@@ -4,7 +4,8 @@ import 'package:project_android_final/common_widget/round_button.dart';
 import 'package:project_android_final/view/main_tabview/main_tabview.dart';
 
 class OnBoardingView extends StatefulWidget {
-  const OnBoardingView({super.key});
+  final VoidCallback? onComplete;
+  const OnBoardingView({Key? key, this.onComplete}) : super(key: key);
 
   @override
   State<OnBoardingView> createState() => _OnBoardingViewState();

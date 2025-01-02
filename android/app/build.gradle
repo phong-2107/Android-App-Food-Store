@@ -9,8 +9,8 @@ android {
     namespace = "com.example.project_android_final"
 
     // Sử dụng các giá trị compileSdk, ndkVersion từ flutter.gradle
-    compileSdk = 34
-    ndkVersion = flutter.ndkVersion
+    compileSdk = 35
+    ndkVersion = "25.1.8937393"
 
     // Nếu bạn đang dùng Java 17, có thể đặt thế này:
     compileOptions {

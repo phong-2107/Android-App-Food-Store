@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart'; // Để lưu token
 import 'package:project_android_final/common/color_extension.dart';
 import 'package:project_android_final/common/extension.dart';
 import 'package:project_android_final/common/globs.dart';
@@ -6,11 +7,8 @@ import 'package:project_android_final/common_widget/round_button.dart';
 import 'package:project_android_final/view/login/rest_password_view.dart';
 import 'package:project_android_final/view/login/sing_up_view.dart';
 import 'package:project_android_final/view/main_tabview/main_tabview.dart';
-import 'package:project_android_final/view/on_boarding/on_boarding_view.dart';
-
-import '../../common/service_call.dart';
-import '../../common_widget/round_icon_button.dart';
 import '../../common_widget/round_textfield.dart';
+import '../../utils/auth.dart'; // Thêm Auth vào import
 
 class LoginView extends StatefulWidget {
   const LoginView({super.key});
@@ -20,13 +18,12 @@ class LoginView extends StatefulWidget {
 }
 
 class _LoginViewState extends State<LoginView> {
-  TextEditingController txtEmail = TextEditingController();
-  TextEditingController txtPassword = TextEditingController();
+  final TextEditingController txtUsername = TextEditingController();
+  final TextEditingController txtPassword = TextEditingController();
+  bool isLoading = false;
 
   @override
   Widget build(BuildContext context) {
-    var media = MediaQuery.of(context).size;
-
     return Scaffold(
       body: SingleChildScrollView(
         child: Padding(
@@ -34,9 +31,7 @@ class _LoginViewState extends State<LoginView> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.center,
             children: [
-              const SizedBox(
-                height: 64,
-              ),
+              const SizedBox(height: 64),
               Text(
                 "Login",
                 style: TextStyle(
@@ -51,34 +46,24 @@ class _LoginViewState extends State<LoginView> {
                     fontSize: 14,
                     fontWeight: FontWeight.w500),
               ),
-              const SizedBox(
-                height: 25,
-              ),
+              const SizedBox(height: 25),
               RoundTextfield(
-                hintText: "Your Email",
-                controller: txtEmail,
-                keyboardType: TextInputType.emailAddress,
+                hintText: "Your Username",
+                controller: txtUsername,
+                keyboardType: TextInputType.text,
               ),
-              const SizedBox(
-                height: 25,
-              ),
+              const SizedBox(height: 25),
               RoundTextfield(
                 hintText: "Password",
                 controller: txtPassword,
                 obscureText: true,
               ),
-              const SizedBox(
-                height: 25,
-              ),
+              const SizedBox(height: 25),
               RoundButton(
-                  title: "Login",
-                  onPressed: () {
-                    btnLogin();
-                    
-                  }),
-              const SizedBox(
-                height: 4,
+                title: isLoading ? "Loading..." : "Login",
+                onPressed: (){ isLoading ? null : btnLogin();},
               ),
+              const SizedBox(height: 4),
               TextButton(
                 onPressed: () {
                   Navigator.push(
@@ -96,9 +81,7 @@ class _LoginViewState extends State<LoginView> {
                       fontWeight: FontWeight.w500),
                 ),
               ),
-              const SizedBox(
-                height: 30,
-              ),
+              const SizedBox(height: 30),
               Text(
                 "or Login With",
                 style: TextStyle(
@@ -106,56 +89,8 @@ class _LoginViewState extends State<LoginView> {
                     fontSize: 14,
                     fontWeight: FontWeight.w500),
               ),
-              const SizedBox(
-                height: 30,
-              ),
-              RoundIconButton(
-                icon: "assets/img/facebook_logo.png",
-                title: "Login with Facebook",
-                color: const Color(0xff367FC0),
-                onPressed: () {},
-              ),
-              const SizedBox(
-                height: 25,
-              ),
-              RoundIconButton(
-                icon: "assets/img/google_logo.png",
-                title: "Login with Google",
-                color: const Color(0xffDD4B39),
-                onPressed: () {},
-              ),
-              const SizedBox(
-                height: 80,
-              ),
-              TextButton(
-                onPressed: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => const SignUpView(),
-                    ),
-                  );
-                },
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Text(
-                      "Don't have an Account? ",
-                      style: TextStyle(
-                          color: TColor.secondaryText,
-                          fontSize: 14,
-                          fontWeight: FontWeight.w500),
-                    ),
-                    Text(
-                      "Sign Up",
-                      style: TextStyle(
-                          color: TColor.primary,
-                          fontSize: 14,
-                          fontWeight: FontWeight.w700),
-                    ),
-                  ],
-                ),
-              ),
+              const SizedBox(height: 30),
+              // Add other login options here
             ],
           ),
         ),
@@ -163,66 +98,62 @@ class _LoginViewState extends State<LoginView> {
     );
   }
 
-  //TODO: Action
-  // void btnLogin() {
-  //   if (!txtEmail.text.isEmail) {
-  //     mdShowAlert(Globs.appName, MSG.enterEmail, () {});
-  //     return;
-  //   }
-  //
-  //   if (txtPassword.text.length < 6) {
-  //     mdShowAlert(Globs.appName, MSG.enterPassword, () {});
-  //     return;
-  //   }
-  //
-  //   endEditing();
-  //
-  //   serviceCallLogin({"email": txtEmail.text, "password": txtPassword.text, "push_token": "" });
-  // }
-  void btnLogin() {
-    if (!txtEmail.text.isEmail) {
-      mdShowAlert(Globs.appName, MSG.enterEmail, () {});
+  Future<void> btnLogin() async {
+    if (txtUsername.text.isEmpty) {
+      mdShowAlert(Globs.appName, "Please enter your username", () {});
       return;
     }
 
-    // Bỏ qua kiểm tra mật khẩu
-    endEditing();
+    if (txtPassword.text.isEmpty) {
+      mdShowAlert(Globs.appName, "Please enter your password", () {});
+      return;
+    }
 
-    // Chỉ gửi email, không gửi mật khẩu
-    serviceCallLogin({"email": txtEmail.text, "push_token": ""});
-  }
-  //TODO: ServiceCall
+    setState(() => isLoading = true);
 
-  void serviceCallLogin(Map<String, dynamic> parameter) {
-    // Globs.showHUD();
+    try {
+      final result = await Auth.login(
+        txtUsername.text.trim(),
+        txtPassword.text.trim(),
+      );
 
-    ServiceCall.post(parameter, SVKey.svLogin, withSuccess: (responseObj) async {
-      Globs.hideHUD();
+      setState(() => isLoading = false);
 
-      if (responseObj[KKey.status] == "1") {
-        // Xử lý thành công
-        Globs.udSet(responseObj[KKey.payload] as Map? ?? {}, Globs.userPayload);
-        Globs.udBoolSet(true, Globs.userLogin);
+      if (result['success'] == true) {
+        // Lưu token vào SharedPreferences
+        SharedPreferences prefs = await SharedPreferences.getInstance();
+        await prefs.setString('jwt_token', result['token']);
 
-        Navigator.pushAndRemoveUntil(
-          context,
-          MaterialPageRoute(
-            builder: (context) => const MainTabView(),
-          ),
-              (route) => false,
-        );
+        // Điều hướng dựa trên vai trò
+        final role = result['role'] ?? "User";
+
+        if (role == 'Admin') {
+          Navigator.pushReplacement(
+            context,
+            MaterialPageRoute(builder: (context) => const MainTabView()), // Thay đổi nếu cần
+          );
+        } else if (role == 'User') {
+          Navigator.pushReplacement(
+            context,
+            MaterialPageRoute(builder: (context) => const MainTabView()), // Thay đổi nếu cần
+          );
+        } else {
+          mdShowAlert(
+            Globs.appName,
+            "Invalid role: $role",
+                () {},
+          );
+        }
       } else {
         mdShowAlert(
           Globs.appName,
-          responseObj[KKey.message] as String? ?? MSG.fail,
+          result['message'] ?? "Login failed",
               () {},
         );
       }
-    }, failure: (err) async {
-      Globs.hideHUD(); // Ẩn loading sau khi xảy ra lỗi
-      mdShowAlert(Globs.appName, err.toString(), () {});
-    });
+    } catch (e) {
+      setState(() => isLoading = false);
+      mdShowAlert(Globs.appName, "An error occurred: ${e.toString()}", () {});
+    }
   }
-
-
 }
