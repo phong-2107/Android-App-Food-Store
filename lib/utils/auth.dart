@@ -1,9 +1,7 @@
-// lib/utils/auth.dart
-
 import 'dart:convert';
-
 import 'package:project_android_final/services/api_client.dart';
 import 'package:project_android_final/services/auth_service.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class Auth {
   static final AuthService _authService = AuthService();
@@ -18,13 +16,16 @@ class Auth {
       var decodedToken = result['decodedToken'];
       if (decodedToken != null && decodedToken.containsKey('role')) {
         result['role'] = decodedToken['role'];
+
+        // Lưu role vào SharedPreferences
+        SharedPreferences prefs = await SharedPreferences.getInstance();
+        await prefs.setString('userRole', decodedToken['role']);
       }
     }
 
     print("Role sau khi xử lý: ${result['role']}");
     return result; // returns a map with {success: bool, token: string?, role: string?, message: string?}
   }
-
 
   // Đăng ký tài khoản mới
   static Future<Map<String, dynamic>> register({
@@ -97,6 +98,10 @@ class Auth {
         var result = jsonDecode(response.body);
 
         if (result['success'] == true) {
+          // Lưu role vào SharedPreferences
+          SharedPreferences prefs = await SharedPreferences.getInstance();
+          await prefs.setString('userRole', result['role'] ?? 'User');
+
           // Trả về vai trò nếu token hợp lệ
           return result['role'] ?? 'User';
         } else {
@@ -127,6 +132,11 @@ class Auth {
       if (response.statusCode == 200) {
         // Chuyển đổi body JSON từ API thành Map
         var result = jsonDecode(response.body);
+
+        // Xóa role khỏi SharedPreferences
+        SharedPreferences prefs = await SharedPreferences.getInstance();
+        await prefs.remove('userRole');
+
         return {
           'success': result['Status'] ?? true,
           'message': result['Message'] ?? 'Đăng xuất thành công',
@@ -145,4 +155,3 @@ class Auth {
     }
   }
 }
-

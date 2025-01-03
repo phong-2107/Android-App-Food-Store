@@ -1,12 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:project_android_final/view/more/about_us_view.dart';
-import 'package:project_android_final/view/more/inbox_view.dart';
-import 'package:project_android_final/view/more/payment_details_view.dart';
-
-import '../../common/color_extension.dart';
-import '../../common/service_call.dart';
-import 'my_order_view.dart';
-import 'notification_view.dart';
+import 'package:project_android_final/view/manager/category.dart';
+import 'package:project_android_final/view/manager/dish.dart';
+import 'package:project_android_final/view/manager/payment.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class MoreView extends StatefulWidget {
   const MoreView({super.key});
@@ -16,7 +12,9 @@ class MoreView extends StatefulWidget {
 }
 
 class _MoreViewState extends State<MoreView> {
-  List moreArr = [
+  String role = ''; // Biến lưu role của người dùng
+
+  List<Map<String, dynamic>> moreArr = [
     {
       "index": "1",
       "name": "Payment Details",
@@ -56,6 +54,42 @@ class _MoreViewState extends State<MoreView> {
   ];
 
   @override
+  void initState() {
+    super.initState();
+    _fetchUserRole();
+  }
+
+  Future<void> _fetchUserRole() async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    String? savedRole = prefs.getString('userRole');
+    setState(() {
+      role = savedRole ?? '';
+      if (role == "Admin") {
+        moreArr.addAll([
+          {
+            "index": "7",
+            "name": "Category",
+            "image": "assets/img/more_info.png",
+            "base": 0
+          },
+          {
+            "index": "8",
+            "name": "Dish",
+            "image": "assets/img/more_info.png",
+            "base": 0
+          },
+          {
+            "index": "9",
+            "name": "Payment",
+            "image": "assets/img/more_info.png",
+            "base": 0
+          },
+        ]);
+      }
+    });
+  }
+
+  @override
   Widget build(BuildContext context) {
     return Scaffold(
       body: SingleChildScrollView(
@@ -64,9 +98,7 @@ class _MoreViewState extends State<MoreView> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.center,
             children: [
-              const SizedBox(
-                height: 46,
-              ),
+              const SizedBox(height: 46),
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 20),
                 child: Row(
@@ -75,17 +107,12 @@ class _MoreViewState extends State<MoreView> {
                     Text(
                       "More",
                       style: TextStyle(
-                          color: TColor.primaryText,
+                          color: Colors.black,
                           fontSize: 20,
                           fontWeight: FontWeight.w800),
                     ),
                     IconButton(
-                      onPressed: () {
-                        Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                                builder: (context) => const MyOrderView()));
-                      },
+                      onPressed: () {},
                       icon: Image.asset(
                         "assets/img/shopping_cart.png",
                         width: 25,
@@ -96,134 +123,109 @@ class _MoreViewState extends State<MoreView> {
                 ),
               ),
               ListView.builder(
-                  padding: EdgeInsets.zero,
-                  physics: const NeverScrollableScrollPhysics(),
-                  shrinkWrap: true,
-                  itemCount: moreArr.length,
-                  itemBuilder: (context, index) {
-                    var mObj = moreArr[index] as Map? ?? {};
-                    var countBase = mObj["base"] as int? ?? 0;
-                    return InkWell(
-                      onTap: () {
-                        switch (mObj["index"].toString()) {
-                          case "1":
-                            Navigator.push(
-                                context,
-                                MaterialPageRoute(
-                                    builder: (context) =>
-                                        const PaymentDetailsView()));
+                padding: EdgeInsets.zero,
+                physics: const NeverScrollableScrollPhysics(),
+                shrinkWrap: true,
+                itemCount: moreArr.length,
+                itemBuilder: (context, index) {
+                  var mObj = moreArr[index];
+                  return InkWell(
+                    onTap: () {
+                      switch (mObj["index"].toString()) {
+                        case "7": // Category
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => const CategoryPage(),
+                            ),
+                          );
+                          break;
+                        case "8": // Dish
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => const DishPage(),
+                            ),
+                          );
+                          break;
 
-                            break;
-
-                          case "2":
-                            Navigator.push(
-                                context,
-                                MaterialPageRoute(
-                                    builder: (context) => const MyOrderView()));
-                          case "3":
-                            Navigator.push(
-                                context,
-                                MaterialPageRoute(
-                                    builder: (context) =>
-                                        const NotificationsView()));
-                          case "4":
-                            Navigator.push(
-                                context,
-                                MaterialPageRoute(
-                                    builder: (context) => const InboxView()));
-                          case "5":
-                            Navigator.push(
-                                context,
-                                MaterialPageRoute(
-                                    builder: (context) => const AboutUsView()));
-                          case "6":
-                            ServiceCall.logout();
-
+                      case "9": // Dish
+                          Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                          builder: (context) => const CustomerOrderPage(),
+                          ),
+                          );
+                          break;
                           default:
-                        }
-                      },
-                      child: Container(
-                        margin: const EdgeInsets.symmetric(
-                            vertical: 8, horizontal: 20),
-                        child: Stack(
-                          alignment: Alignment.centerRight,
-                          children: [
-                            Container(
-                              padding: const EdgeInsets.symmetric(
-                                  vertical: 12, horizontal: 12),
-                              decoration: BoxDecoration(
-                                  color: TColor.textfield,
-                                  borderRadius: BorderRadius.circular(5)),
-                              margin: const EdgeInsets.only(right: 15),
-                              child: Row(
-                                mainAxisAlignment: MainAxisAlignment.start,
-                                children: [
-                                  Container(
-                                    width: 50,
-                                    height: 50,
-                                    padding: const EdgeInsets.all(8),
-                                    decoration: BoxDecoration(
-                                        color: TColor.placeholder,
-                                        borderRadius:
-                                            BorderRadius.circular(25)),
-                                    alignment: Alignment.center,
-                                    child: Image.asset(mObj["image"].toString(),
-                                        width: 25,
-                                        height: 25,
-                                        fit: BoxFit.contain),
+
+                      }
+                    },
+                    child: Container(
+                      margin: const EdgeInsets.symmetric(
+                          vertical: 8, horizontal: 20),
+                      child: Stack(
+                        alignment: Alignment.centerRight,
+                        children: [
+                          Container(
+                            padding: const EdgeInsets.symmetric(
+                                vertical: 12, horizontal: 12),
+                            decoration: BoxDecoration(
+                              color: Colors.grey[200],
+                              borderRadius: BorderRadius.circular(5),
+                            ),
+                            margin: const EdgeInsets.only(right: 15),
+                            child: Row(
+                              mainAxisAlignment: MainAxisAlignment.start,
+                              children: [
+                                Container(
+                                  width: 50,
+                                  height: 50,
+                                  padding: const EdgeInsets.all(8),
+                                  decoration: BoxDecoration(
+                                    color: Colors.grey[300],
+                                    borderRadius: BorderRadius.circular(25),
                                   ),
-                                  const SizedBox(
-                                    width: 15,
+                                  alignment: Alignment.center,
+                                  child: Image.asset(
+                                    mObj["image"].toString(),
+                                    width: 25,
+                                    height: 25,
+                                    fit: BoxFit.contain,
                                   ),
-                                  Expanded(
-                                    child: Text(
-                                      mObj["name"].toString(),
-                                      style: TextStyle(
-                                          color: TColor.primaryText,
-                                          fontSize: 14,
-                                          fontWeight: FontWeight.w600),
+                                ),
+                                const SizedBox(width: 15),
+                                Expanded(
+                                  child: Text(
+                                    mObj["name"].toString(),
+                                    style: TextStyle(
+                                      color: Colors.black,
+                                      fontSize: 14,
+                                      fontWeight: FontWeight.w600,
                                     ),
                                   ),
-                                  const SizedBox(
-                                    width: 15,
-                                  ),
-                                  if (countBase > 0)
-                                    Container(
-                                      padding: const EdgeInsets.all(4),
-                                      decoration: BoxDecoration(
-                                          color: Colors.red,
-                                          borderRadius:
-                                              BorderRadius.circular(12.5)),
-                                      alignment: Alignment.center,
-                                      child: Text(
-                                        countBase.toString(),
-                                        style: TextStyle(
-                                            color: TColor.white,
-                                            fontSize: 12,
-                                            fontWeight: FontWeight.w600),
-                                      ),
-                                    ),
-                                  const SizedBox(
-                                    width: 10,
-                                  ),
-                                ],
-                              ),
+                                ),
+                              ],
                             ),
-                            Container(
-                              padding: const EdgeInsets.all(8),
-                              decoration: BoxDecoration(
-                                  color: TColor.textfield,
-                                  borderRadius: BorderRadius.circular(15)),
-                              child: Image.asset("assets/img/btn_next.png",
-                                  width: 10,
-                                  height: 10,
-                                  color: TColor.primaryText),
+                          ),
+                          Container(
+                            padding: const EdgeInsets.all(8),
+                            decoration: BoxDecoration(
+                              color: Colors.grey[200],
+                              borderRadius: BorderRadius.circular(15),
                             ),
-                          ],
-                        ),
+                            child: const Icon(
+                              Icons.arrow_forward_ios,
+                              size: 10,
+                              color: Colors.black,
+                            ),
+                          ),
+                        ],
                       ),
-                    );
-                  })
+                    ),
+                  );
+                },
+              ),
             ],
           ),
         ),

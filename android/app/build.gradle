@@ -6,7 +6,7 @@ plugins {
 }
 
 android {
-    namespace = "com.example.project_android_final"
+    namespace  "com.example.project_android_final"
 
     // Sử dụng các giá trị compileSdk, ndkVersion từ flutter.gradle
     compileSdk = 35
